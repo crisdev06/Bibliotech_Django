@@ -1,0 +1,33 @@
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #E3F2FD;
+  font-family: 'Segoe UI', sans-serif;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+th {
+  background-color: #1976D2;
+  color: #FFFFFF;
+  padding: 12px;
+  text-align: left;
+  border-bottom: 2px solid #0D47A1;
+}
+
+td {
+  padding: 10px;
+  border-bottom: 1px solid #90CAF9;
+}
+
+tr:nth-child(even) {
+  background-color: #BBDEFB;
+}
+
+tr:nth-child(odd) {
+  background-color: #E3F2FD;
+}
+
+tr:hover {
+  background-color: #90CAF9;
+  transition: background-color 0.3s ease;
+}

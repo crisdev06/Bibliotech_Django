@@ -1,0 +1,42 @@
+/* NAVBAR PERSONALIZADO BASADO EN PALETA AZUL */
+
+/* Fondo azul medio */
+.navbar-custom {
+  background-color: #4a90e2; /* Azul vibrante de tu paleta */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra sutil */
+}
+
+/* Marca y enlaces */
+.navbar-custom .navbar-brand,
+.navbar-custom .nav-link,
+.navbar-custom .dropdown-toggle {
+  color: #ffffff;
+  transition: color 0.3s ease;
+}
+
+/* Hover sobre enlaces */
+.navbar-custom .nav-link:hover,
+.navbar-custom .dropdown-item:hover {
+  color: #d4e6ff; /* Azul claro al pasar el mouse */
+}
+
+/* Menú desplegable */
+.navbar-custom .dropdown-menu {
+  background-color: #f0f8ff; /* Azul muy claro */
+  border: 1px solid #cce0ff;
+}
+
+/* Opciones del menú */
+.navbar-custom .dropdown-item {
+  color: #004080; /* Azul profundo */
+}
+
+/* Botón hamburguesa */
+.navbar-toggler {
+  border-color: #ffffff;
+}
+
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='white' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+

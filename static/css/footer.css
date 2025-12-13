@@ -1,0 +1,22 @@
+/* Footer */
+.site-footer {
+    background-color: #1d3a6d;
+    color: #a4c9df;
+    padding: 20px;
+    text-align: center;
+    margin-top: 40px;
+}
+
+.footer-links {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.footer-links .logo {
+    width: 32px;
+    height: 32px;
+    filter: brightness(0) invert(1);
+}
