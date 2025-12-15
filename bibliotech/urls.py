@@ -16,6 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.contrib.auth.views import LoginView, LogoutView
 from inicio import views
 from apps.libros import views as libroV
 from apps.usuarios import views as usuarioV
@@ -23,12 +24,27 @@ from apps.prestamos import views as prestamoV
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.vista_index, name='index'),  
-    path('registrar-cliente/', views.vista_registrar_cliente, name='registrar_cliente'),
-    path('registrar-libro/', views.vista_registrar_libro, name='registrar_libro'),
-    path('renta/', views.vista_renta, name='renta'),
-    path('login/', views.vista_login, name='login'),
-    path('tabla-usuarios/', usuarioV.listar_usuarios, name='tabla_usuarios'),
+    path('', views.vista_index, name='index'),
+    # Rutas de ACCESO y SALIDA
+    path('login/', LoginView.as_view(template_name='login.html'), name='login'),
+    path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
+
+    # Rutas para LIBROS
+    path('registrar-libro/', libroV.registrar_libro, name='registrar_libro'),
+    path('editar-libro/<int:id>/', libroV.editar_libro, name='editar_libro'),
+    path('eliminar-libro/<int:id>/', libroV.eliminar_libro, name='eliminar_libro'),
     path('tabla-libros/', libroV.listar_libros, name='tabla_libros'),
+
+    # Rutas para USUARIOS
+    path('registrar-cliente/', usuarioV.registrar_usuario, name='registrar_cliente'),
+    path('editar-usuario/<int:id>/', usuarioV.editar_usuario, name='editar_usuario'),
+    path('eliminar-usuario/<int:id>/', usuarioV.eliminar_usuario, name='eliminar_usuario'),
+    path('tabla-usuarios/', usuarioV.listar_usuarios, name='tabla_usuarios'),
+
+    # Rutas para PRESTAMOS
+    path('renta/', prestamoV.registrar_prestamo, name='renta'),
+    path('editar-prestamo/<int:id>/', prestamoV.editar_prestamo, name='editar_prestamo'),
+    path('eliminar-prestamo/<int:id>/', prestamoV.eliminar_prestamo, name='eliminar_prestamo'),
     path('tabla-prestamos/', prestamoV.listar_prestamos, name='tabla_prestamos'),
+    path('devolucion/<int:id_prestamo>/', prestamoV.devolucion_libro, name='devolucion_libro'),
 ]

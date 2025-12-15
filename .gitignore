@@ -1,0 +1,13 @@
+# Python y Django
+*.pyc
+__pycache__/
+db.sqlite3
+*.log
+
+# Entornos virtuales (nombre de tu carpeta de entorno)
+venv/
+env/
+.env
+
+# Archivos de sistema
+.DS_Store
