@@ -25,6 +25,8 @@ from apps.prestamos import views as prestamoV
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.vista_index, name='index'),
+
+
     # Rutas de ACCESO y SALIDA
     path('login/', LoginView.as_view(template_name='login.html'), name='login'),
     path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
@@ -34,6 +36,8 @@ urlpatterns = [
     path('editar-libro/<int:id>/', libroV.editar_libro, name='editar_libro'),
     path('eliminar-libro/<int:id>/', libroV.eliminar_libro, name='eliminar_libro'),
     path('tabla-libros/', libroV.listar_libros, name='tabla_libros'),
+    path('catalogo/', libroV.catalogo, name='catalogo'),
+
 
     # Rutas para USUARIOS
     path('registrar-cliente/', usuarioV.registrar_usuario, name='registrar_cliente'),

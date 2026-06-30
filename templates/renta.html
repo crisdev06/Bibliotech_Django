@@ -24,9 +24,12 @@
 
                     <div class="collapse navbar-collapse">
 
-                        {% if user.is_authenticated %}
                         <ul class="navbar-nav me-auto">
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'catalogo' %}">Catálogo</a>
+                            </li>
 
+                            {% if user.is_authenticated %}
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'renta' %}">Solicitar Libro</a>
                             </li>
@@ -98,7 +101,151 @@
         <section class="bg-light py-5">
             <div class="container">
                 <h2 class="mb-4 text-center">Formulario de Renta de Libros</h2>
+                <form method="POST" class="p-4 border rounded bg-white shadow-sm">
+                    {% csrf_token %}
 
+                    <h2 class="mb-3 text-center">Registrar Nuevo Préstamo</h2>
+
+                    {% for field in form %}
+                    {% if field.name == 'libro' %}
+                    <div class="mb-3 position-relative">
+                        <label class="form-label fw-bold">{{ field.label }}</label>
+
+                        <input type="text" id="buscador-libro" class="form-control"
+                            placeholder="Escribe el título o autor del libro..." autocomplete="off">
+
+                        <!-- Select real, oculto, sigue siendo el campo que Django valida y procesa -->
+                        <div style="display:none;">
+                            {{ field }}
+                        </div>
+
+                        <ul id="sugerencias-libro" class="list-group position-absolute w-100"
+                            style="z-index: 1000; display:none; max-height: 220px; overflow-y:auto;"></ul>
+
+                        <div id="libro-no-encontrado" class="text-danger small mt-1" style="display:none;">
+                            No se encontró ningún libro con ese nombre.
+                        </div>
+
+                        {% if field.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ field.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ field.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">Registrar Préstamo</button>
+                        <a href="{% url 'index' %}" class="btn btn-secondary">Cancelar</a>
+                    </div>
+                </form>
+
+                {{ libros_json|json_script:"libros-data" }}
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        const libros = JSON.parse(document.getElementById('libros-data').textContent);
+
+
+                        const inputBuscador = document.getElementById('buscador-libro');
+                        const selectLibro = document.querySelector('select[name="libro"]'); // ajusta si el name es distinto
+                        const listaSugerencias = document.getElementById('sugerencias-libro');
+                        const avisoNoEncontrado = document.getElementById('libro-no-encontrado');
+
+                        console.log('libros:', libros);
+                        console.log('selectLibro:', selectLibro);
+                        console.log('selectLibro.value:', selectLibro?.value);
+
+                        // Si viene preseleccionado (ej: desde el catálogo con ?libro=ID), mostrar el título en el input
+                        if (selectLibro && selectLibro.value) {
+                            const libroPre = libros.find(l => String(l.id) === String(selectLibro.value));
+                            if (libroPre) {
+                                inputBuscador.value = `${libroPre.titulo}`;
+                                /*
+                                inputBuscador.value = `${libroPre.titulo} - ${libroPre.autor}`;
+                                */
+                            }
+                        }
+
+                        function limpiarSeleccion() {
+                            if (selectLibro) selectLibro.value = '';
+                        }
+
+                        function mostrarSugerencias(filtro) {
+                            listaSugerencias.innerHTML = '';
+                            avisoNoEncontrado.style.display = 'none';
+
+                            if (!filtro) {
+                                listaSugerencias.style.display = 'none';
+                                return;
+                            }
+
+                            const filtroLower = filtro.toLowerCase();
+                            const coincidencias = libros.filter(l =>
+                                l.titulo.toLowerCase().includes(filtroLower) ||
+                                l.autor.toLowerCase().includes(filtroLower)
+                            );
+
+                            if (coincidencias.length === 0) {
+                                listaSugerencias.style.display = 'none';
+                                avisoNoEncontrado.style.display = 'block';
+                                limpiarSeleccion();
+                                return;
+                            }
+
+                            coincidencias.slice(0, 8).forEach(libro => {
+                                const item = document.createElement('li');
+                                item.className = 'list-group-item list-group-item-action';
+                                item.style.cursor = 'pointer';
+                                item.textContent = `${libro.titulo} - ${libro.autor}`;
+
+                                item.addEventListener('click', () => {
+                                    inputBuscador.value = `${libro.titulo} - ${libro.autor}`;
+                                    selectLibro.value = libro.id;
+                                    listaSugerencias.style.display = 'none';
+                                    avisoNoEncontrado.style.display = 'none';
+                                });
+
+                                listaSugerencias.appendChild(item);
+                            });
+
+                            listaSugerencias.style.display = 'block';
+                        }
+
+                        inputBuscador.addEventListener('input', function () {
+                            limpiarSeleccion(); // si escribe de nuevo, invalida lo seleccionado hasta que elija de la lista
+                            mostrarSugerencias(this.value.trim());
+                        });
+
+                        // Cerrar sugerencias al hacer click fuera
+                        document.addEventListener('click', function (e) {
+                            if (!inputBuscador.contains(e.target) && !listaSugerencias.contains(e.target)) {
+                                listaSugerencias.style.display = 'none';
+                            }
+                        });
+
+                        // Validación antes de enviar: si no hay select.value, no dejar enviar
+                        inputBuscador.closest('form').addEventListener('submit', function (e) {
+                            if (inputBuscador.value.trim() !== '' && !selectLibro.value) {
+                                e.preventDefault();
+                                avisoNoEncontrado.style.display = 'block';
+                                avisoNoEncontrado.textContent = 'Debes seleccionar un libro válido de la lista.';
+                            }
+                        });
+                    });
+                </script>
+
+                <!-- 
                 <form method="POST" class="p-4 border rounded bg-white shadow-sm">
                     {% csrf_token %}
 
@@ -122,6 +269,7 @@
                         <a href="{% url 'index' %}" class="btn btn-secondary">Cancelar</a>
                     </div>
                 </form>
+                -->
             </div>
         </section>
 
@@ -146,6 +294,7 @@
 
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 
 </html>

@@ -24,9 +24,12 @@
 
                     <div class="collapse navbar-collapse">
 
-                        {% if user.is_authenticated %}
                         <ul class="navbar-nav me-auto">
 
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'catalogo' %}">Catálogo</a>
+                            </li>
+                            {% if user.is_authenticated %}
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'renta' %}">Solicitar Libro</a>
                             </li>

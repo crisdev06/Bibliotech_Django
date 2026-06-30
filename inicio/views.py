@@ -9,3 +9,4 @@ def vista_index(request):
 def vista_login(request):
     # Esta vista renderiza la plantilla de login
     return render(request, 'login.html')
+

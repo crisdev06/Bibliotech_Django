@@ -5,6 +5,7 @@ from .models import Libro
 from django.contrib import messages
 
 
+
 def listar_libros(request):
     # 1. Vamos a la base de datos y traemos TODOS los libros
     libros = Libro.objects.filter(activo=True)
@@ -76,3 +77,23 @@ def eliminar_libro(request, id):
     libro.activo = False # Apagamos el interruptor
     libro.save()
     return redirect('tabla_libros')
+
+def catalogo(request):
+    """
+    Controlador encargado de filtrar los libros mediante la query 'search'
+    y renderizar la plantilla del catálogo.
+    """
+    query = request.GET.get('search', '')
+    
+    if query:
+        # Filtra si hay texto en el buscador
+        libros = Libro.objects.filter(activo=True, titulo__icontains=query)
+    else:
+        # Trae todo si el buscador está vacío
+        libros = Libro.objects.filter(activo=True)
+        
+    context = {
+        'libros': libros
+    }
+    
+    return render(request, 'catalogo.html', context)
