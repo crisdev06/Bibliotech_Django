@@ -101,6 +101,22 @@
 
         <section class="bg-light">
             <div class="container mt-5">
+
+                {% if tiene_atrasos and not user.is_superuser %}
+                <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                        class="bi bi-exclamation-triangle-fill me-2 flex-shrink-0" viewBox="0 0 16 16">
+                        <path
+                            d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z" />
+                    </svg>
+                    <div>
+                        <strong>Tienes préstamos atrasados.</strong> Se están generando multas por día de retraso.
+                        Por favor devuelve los libros a la brevedad.
+                    </div>
+                </div>
+                {% endif %}
+
+
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h2 class="text-center">Historial de Préstamos</h2>
                 </div>
@@ -114,20 +130,47 @@
                                 <th class="text-center">Cliente</th>
                                 <th class="text-center">Fecha Inicio</th>
                                 <th class="text-center">Fecha Devolución</th>
+                                <th class="text-center">Días Atraso</th>
+                                <th class="text-center">Multa</th>
                                 <th class="text-center">Estado</th>
                                 <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for prestamo in prestamos %}
-                            <tr>
-                                <td class="text-center fw-bold">{{ prestamo.id }}</td>
+                            <!-- Resaltamos la fila completa si está atrasada -->
+                            <tr class="{% if prestamo.estado_prestamo == 'ATRASADO' %}table-danger{% endif %}">
 
+
+                                <td class="text-center fw-bold">{{ prestamo.id }}</td>
                                 <td>{{ prestamo.libro.titulo }}</td>
                                 <td>{{ prestamo.usuario.nombre }} {{ prestamo.usuario.apellidos }}</td>
-
                                 <td class="text-center">{{ prestamo.fecha_prestamo|date:"d/m/Y" }}</td>
                                 <td class="text-center">{{ prestamo.fecha_devolucion|date:"d/m/Y" }}</td>
+
+                                <!-- Días de atraso (calculado en tiempo real desde la propiedad del modelo) -->
+                                <td class="text-center">
+                                    {% if prestamo.dias_atraso > 0 %}
+                                    <span class="fw-bold text-danger">{{ prestamo.dias_atraso }}
+                                        {% if prestamo.dias_atraso == 1 %} día
+                                        {% else %}días
+                                        {% endif %}
+                                    </span>
+                                    {% else %}
+                                    <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+
+                                <!-- Multa -->
+                                <td class="text-center">
+                                    {% if prestamo.monto_multa > 0 %}
+                                    <span class="fw-bold text-danger">${{ prestamo.monto_multa }}</span>
+                                    {% else %}
+                                    <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+
+
 
                                 <td class="text-center">
                                     {% if prestamo.estado_prestamo == 'VIGENTE' %}

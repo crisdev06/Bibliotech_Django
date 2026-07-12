@@ -1,5 +1,5 @@
 from django import forms
-from .models import Libro
+from .models import Libro, Categoria
 from django.core.exceptions import ValidationError
 import re
 import datetime
@@ -15,11 +15,12 @@ class LibroForm(forms.ModelForm):
     class Meta:
         model = Libro
         # Listamos los campos que queremos que el usuario llene
-        fields = ['titulo', 'autor', 'editorial', 'anio', 'stock', 'activo']
+        fields = ['titulo', 'categoria', 'autor', 'editorial', 'anio', 'stock', 'activo']
         
         # Etiquetas personalizadas para que se vea bonito en el HTML
         labels = {
             'titulo': 'Título de la Obra',
+            'categoria': 'Categoría',
             'autor': 'Autor',
             'editorial': 'Editorial',   
             'anio': 'Año de Publicación',
@@ -33,6 +34,10 @@ class LibroForm(forms.ModelForm):
                 'type': 'text',
                 'class': 'form-control',
                 'placeholder': 'Ingrese el título del libro'
+            }),
+            'categoria': forms.Select(attrs={
+                'class': 'form-control',
+                'placeholder': 'ingrese la categoría del libro'
             }),
             'autor': forms.TextInput(attrs={
                 'type': 'text',

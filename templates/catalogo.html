@@ -132,6 +132,23 @@
                 </div>
             </div>
 
+
+            <!-- Filtros de categoría -->
+            <div class="d-flex flex-wrap gap-2 mb-4">
+                <a href="{% url 'catalogo' %}{% if request.GET.search %}?search={{ request.GET.search }}{% endif %}"
+                    class="btn btn-sm {% if not categoria_seleccionada %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    Todos
+                </a>
+                {% for cat in categorias %}
+                <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}categoria={{ cat.id }}"
+                    class="btn btn-sm {% if categoria_seleccionada == cat.id|stringformat:'s' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    {{ cat.nombre }}
+                </a>
+                {% endfor %}
+            </div>
+
+
+
             <!-- Contenedor del catálogo de libros -->
             <div class="row g-4">
                 {% for libro in libros %}
@@ -142,6 +159,10 @@
                         <div class="card-body">
                             <h5 class="card-title">{{ libro.titulo }}</h5>
                             <h6 class="card-subtitle mb-2 text-muted">{{ libro.autor }}</h6>
+                            {% if libro.categoria %}
+                            <span class="badge bg-secondary mb-2" style="width: fit-content;">{{ libro.categoria.nombre
+                                }}</span>
+                            {% endif %}
                             {% if user.is_authenticated %}
                             <a href="{% url 'renta' %}?libro={{ libro.id }}" class="btn btn-primary mt-auto">
                                 Arrendar

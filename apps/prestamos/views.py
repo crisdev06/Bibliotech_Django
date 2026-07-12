@@ -15,8 +15,42 @@ def obtener_usuario_actual(request):
         return Usuario.objects.get(rut=request.user.username)
     except Usuario.DoesNotExist:
         return None
-    
 
+
+def listar_prestamos(request):
+    if request.user.is_superuser:
+        prestamos = Prestamo.objects.filter(activo=True)
+    else:
+        try:
+            usuario_real = Usuario.objects.get(rut=request.user.username)
+            prestamos = Prestamo.objects.filter(activo=True, usuario=usuario_real)
+        except Usuario.DoesNotExist:
+            messages.error(request, "Error: Tu usuario no tiene un perfil de Cliente asociado.")
+            prestamos = Prestamo.objects.none()
+
+   
+    for prestamo in prestamos:
+        estado_correcto = 'VIGENTE'
+        if prestamo.fecha_devolucion_real:
+            estado_correcto = 'DEVUELTO'
+        elif prestamo.fecha_devolucion < date.today():
+            estado_correcto = 'ATRASADO'
+
+        if prestamo.estado_prestamo != estado_correcto:
+            Prestamo.objects.filter(pk=prestamo.pk).update(estado_prestamo=estado_correcto)
+            prestamo.estado_prestamo = estado_correcto  # actualizamos el objeto en memoria también
+
+    
+    tiene_atrasos = any(p.estado_prestamo == 'ATRASADO' for p in prestamos)
+
+    contexto = {
+        'prestamos': prestamos,
+        'tiene_atrasos': tiene_atrasos,
+    }
+    return render(request, 'tablaPrestamos.html', contexto)
+
+
+"""
 def listar_prestamos(request):
     if request.user.is_superuser:
         prestamos = Prestamo.objects.filter(activo=True)
@@ -30,7 +64,7 @@ def listar_prestamos(request):
 
     contexto = {'prestamos': prestamos}
     return render(request, 'tablaPrestamos.html', contexto)
-
+"""
 
 """
 def listar_prestamos(request):
@@ -118,6 +152,35 @@ def registrar_prestamo(request):
 
     return render(request, 'renta.html', {'form': form})
 """
+
+def editar_prestamo(request, id):
+    prestamo = get_object_or_404(Prestamo, id=id)
+    libro_original = prestamo.libro  # guardamos el libro antes de editar
+
+    if request.method == 'POST':
+        form = PrestamoForm(request.POST, instance=prestamo)
+        if form.is_valid():
+            prestamo_editado = form.save(commit=False)
+
+            # Si cambió el libro, ajustamos stock de ambos
+            if prestamo_editado.libro != libro_original:
+                libro_original.stock += 1
+                libro_original.save()
+                if prestamo_editado.libro.stock <= 0:
+                    messages.error(request, "El libro seleccionado no tiene stock disponible.")
+                    return render(request, 'renta.html', {'form': form})
+                prestamo_editado.libro.stock -= 1
+                prestamo_editado.libro.save()
+
+            prestamo_editado.save()
+            return redirect('tabla_prestamos')
+    else:
+        form = PrestamoForm(instance=prestamo)
+    return render(request, 'renta.html', {'form': form})
+
+
+
+"""
 def editar_prestamo(request, id):
     prestamo = get_object_or_404(Prestamo, id=id)
     if request.method == 'POST':
@@ -128,13 +191,26 @@ def editar_prestamo(request, id):
     else:
         form = PrestamoForm(instance=prestamo)
     return render(request, 'renta.html', {'form': form})
+"""
+def eliminar_prestamo(request, id):
+    prestamo = get_object_or_404(Prestamo, id=id)
+    
+    # Solo restauramos stock si el libro no fue devuelto aún
+    if not prestamo.fecha_devolucion_real:
+        prestamo.libro.stock += 1
+        prestamo.libro.save()
+    
+    prestamo.activo = False
+    prestamo.save()
+    return redirect('tabla_prestamos')
 
+"""
 def eliminar_prestamo(request, id):
     prestamo = get_object_or_404(Prestamo, id=id)
     prestamo.activo = False
     prestamo.save()
     return redirect('tabla_prestamos')
-
+"""
 def devolucion_libro(request, id_prestamo):
     prestamo = get_object_or_404(Prestamo, id=id_prestamo)
     

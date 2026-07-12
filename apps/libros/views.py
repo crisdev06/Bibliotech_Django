@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.shortcuts import get_object_or_404
 from .forms import LibroForm
-from .models import Libro
+from .models import Libro, Categoria
 from django.contrib import messages
 
 
@@ -79,10 +79,28 @@ def eliminar_libro(request, id):
     return redirect('tabla_libros')
 
 def catalogo(request):
-    """
-    Controlador encargado de filtrar los libros mediante la query 'search'
-    y renderizar la plantilla del catálogo.
-    """
+    query = request.GET.get('search', '')
+    categoria_id = request.GET.get('categoria', '')
+
+    libros = Libro.objects.filter(activo=True)
+
+    if query:
+        libros = libros.filter(titulo__icontains=query) | libros.filter(autor__icontains=query)
+
+    if categoria_id:
+        libros = libros.filter(categoria__id=categoria_id)
+
+    categorias = Categoria.objects.all()
+
+    return render(request, 'catalogo.html', {
+        'libros': libros,
+        'categorias': categorias,
+        'categoria_seleccionada': categoria_id,
+    })
+
+"""
+def catalogo(request):
+
     query = request.GET.get('search', '')
     
     if query:
@@ -97,3 +115,4 @@ def catalogo(request):
     }
     
     return render(request, 'catalogo.html', context)
+"""

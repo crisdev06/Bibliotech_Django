@@ -4,6 +4,7 @@ from datetime import date
 from apps.usuarios.models import Usuario
 from apps.libros.models import Libro
 
+
 class Prestamo(models.Model):
     ESTADOS_PRESTAMO = [
         ('VIGENTE', 'Vigente'),
@@ -30,29 +31,36 @@ class Prestamo(models.Model):
     
     renovado = models.BooleanField(default=False, verbose_name="¿Fue renovado?")
     activo = models.BooleanField(default=True, verbose_name="¿Está activo?") # Recuerda que cambiamos 'estado' por 'activo' en pasos anteriores
+    
+
 
     def __str__(self):
         return f"Préstamo: {self.libro.titulo} - {self.usuario.nombre}"
+    
+    @property
+    def dias_atraso(self):
+        if self.fecha_devolucion_real:
+            return 0  
+        atraso = (date.today() - self.fecha_devolucion).days
+        return max(atraso, 0)
 
-    def clean(self):
-        # Si es un préstamo NUEVO (no tiene ID aún)
-        if not self.id:
-            # Verificamos si el libro tiene stock disponible
-            if self.libro.stock <= 0:
-                raise ValidationError(f"Lo sentimos, no queda stock del libro '{self.libro.titulo}'.")
+    @property
+    def monto_multa(self):
+        MULTA_POR_DIA = 500  #por definir una multa(precio o sancion)
+        return self.dias_atraso * MULTA_POR_DIA
 
-    # --- AQUÍ ESTÁ LA MAGIA ---
+
+
     def save(self, *args, **kwargs):
-        # --- Lógica de Stock ---
-        # Detectamos si es un registro NUEVO (pk es None)
         es_nuevo = self.pk is None
         
         if es_nuevo:
-            # Si es nuevo, descontamos 1 al stock del libro
+            # Validación de stock (aquí sí se ejecuta siempre)
+            if self.libro.stock <= 0:
+                raise ValidationError(f"Lo sentimos, no queda stock del libro '{self.libro.titulo}'.")
             self.libro.stock -= 1
-            self.libro.save() # Guardamos el cambio en la tabla de Libros
+            self.libro.save()
 
-        # --- Lógica de Estados (la que ya teníamos) ---
         if self.fecha_devolucion_real:
             self.estado_prestamo = 'DEVUELTO'
         elif self.fecha_devolucion < date.today():
