@@ -74,7 +74,8 @@
                             <span class="navbar-text me-3 text-white" style="color: inherit;">
                                 Hola, {{ user.first_name|default:user.username|title }}
                             </span>
-                            <form action="{% url 'logout' %}" method="post" class="d-flex m-0 bg-transparent">
+                            <form action="{% url 'logout' %}" method="post"
+                                class="d-flex m-0 p-0 bg-transparent border-0">
                                 {% csrf_token %}
                                 <button class="btn btn-sm btn-danger border-0 fw-bold px-3" type="submit">Cerrar
                                     Sesión</button>
@@ -99,60 +100,229 @@
 
         <section class="bg-light py-5">
             <div class="container">
-                <h2 class="mb-4 text-center">Formulario de Registro de Libros</h2>
+                <h2 class="mb-4 text-center">Registro de Libros</h2>
 
-                <form method="POST" class="p-4 border rounded bg-white shadow-sm">
-                    {% csrf_token %}
-                    <h2 class="mb-3">Registrar Libro</h2>
+                <!-- Resultados de carga masiva -->
+                {% if exitosos is not None %}
+                <div class="alert alert-success alert-dismissible fade show mb-4">
+                    <strong>{{ exitosos }} libro(s) importado(s) correctamente.</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endif %}
+                {% if errores %}
+                <div class="alert alert-warning alert-dismissible fade show mb-4">
+                    <strong>Advertencias durante la importación:</strong>
+                    <ul class="mb-0 mt-2">
+                        {% for error in errores %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endif %}
 
-                    <div class="mb-3">
-                        <label for="{{ form.titulo.id_for_label }}" class="form-label">Título</label>
-                        {{ form.titulo }}
-                        <div class="text-danger small">{{ form.titulo.errors }}</div>
+                {% if messages %}
+                {% for message in messages %}
+                <div
+                    class="alert alert-{% if 'error' in message.tags %}danger{% else %}success{% endif %} alert-dismissible fade show mb-4">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                <div class="row g-4">
+
+                    <!-- FORMULARIO INDIVIDUAL -->
+                    <div class="col-12 col-lg-6">
+                        <form method="POST" class="p-4 border rounded bg-white shadow-sm h-100">
+                            {% csrf_token %}
+                            <h5 class="mb-3 fw-bold">Registrar Libro Individual</h5>
+
+                            <div class="mb-3">
+                                <label for="{{ form.titulo.id_for_label }}" class="form-label">Título</label>
+                                {{ form.titulo }}
+                                <div class="text-danger small">{{ form.titulo.errors }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.autor.id_for_label }}" class="form-label">Autor</label>
+                                {{ form.autor }}
+                                <div class="text-danger small">{{ form.autor.errors }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.editorial.id_for_label }}" class="form-label">Editorial</label>
+                                {{ form.editorial }}
+                                <div class="text-danger small">{{ form.editorial.errors }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.anio.id_for_label }}" class="form-label">Año de publicación</label>
+                                {{ form.anio }}
+                                <div class="text-danger small">{{ form.anio.errors }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.stock.id_for_label }}" class="form-label">Stock</label>
+                                {{ form.stock }}
+                                <div class="text-danger small">{{ form.stock.errors }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.categoria.id_for_label }}" class="form-label">Categoría</label>
+                                {{ form.categoria }}
+                                <div class="text-danger small">{{ form.categoria.errors }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.descripcion.id_for_label }}" class="form-label">Descripción /
+                                    Sinopsis</label>
+                                {{ form.descripcion }}
+                                <div class="text-danger small">{{ form.descripcion.errors }}</div>
+                            </div>
+
+                            {% if form.errors %}
+                            <div class="alert alert-danger">Por favor corrige los errores.</div>
+                            {% endif %}
+
+                            <div class="d-grid">
+                                <button class="btn btn-primary" type="submit">Ingresar Libro</button>
+                            </div>
+                        </form>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="{{ form.autor.id_for_label }}" class="form-label">Autor</label>
-                        {{ form.autor }}
-                        <div class="text-danger small">{{ form.autor.errors }}</div>
+                    <!-- CARGA MASIVA POR EXCEL -->
+                    <div class="col-12 col-lg-6">
+                        <div class="p-4 border rounded bg-white shadow-sm h-100 d-flex flex-column">
+                            <h5 class="mb-3 fw-bold">Importar desde Excel</h5>
+
+                            <!-- Formato esperado -->
+                            <div class="alert alert-info small mb-3">
+                                <strong>Formato del archivo (.xlsx):</strong>
+                                <table class="table table-sm table-bordered mt-2 mb-0">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>A</th>
+                                            <th>B</th>
+                                            <th>C</th>
+                                            <th>D</th>
+                                            <th>E</th>
+                                            <th>F</th>
+                                            <th>G</th>
+                                        </tr>
+                                        <tr>
+                                            <th>titulo</th>
+                                            <th>autor</th>
+                                            <th>editorial</th>
+                                            <th>anio</th>
+                                            <th>stock</th>
+                                            <th>categoria</th>
+                                            <th>descripcion</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                                <ul class="mt-2 mb-0 ps-3">
+                                    <li>Título, autor, editorial y año son <strong>obligatorios</strong>.</li>
+                                    <li>La categoría debe coincidir con una existente en el sistema.</li>
+                                    <li>La descripción es opcional.</li>
+                                </ul>
+                            </div>
+
+                            <!-- Zona de arrastre -->
+                            <form method="POST" enctype="multipart/form-data" id="form-excel"
+                                class="flex-grow-1 d-flex flex-column">
+                                {% csrf_token %}
+                                <div id="drop-zone"
+                                    class="border border-2 border-dashed rounded-3 d-flex flex-column align-items-center justify-content-center flex-grow-1 p-4 text-center"
+                                    style="border-color: #adb5bd !important; min-height: 220px; cursor: pointer; transition: background 0.2s;">
+
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="#adb5bd"
+                                        class="bi bi-file-earmark-spreadsheet mb-3" viewBox="0 0 16 16">
+                                        <path
+                                            d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z" />
+                                        <path
+                                            d="M3 9h10v1H3V9zm0 2h4v1H3v-1zm0-4h3v1H3V7zm7 4h3v1h-3v-1zm0-2h3v1h-3V9z" />
+                                    </svg>
+
+                                    <p class="mb-1 fw-semibold" id="drop-text">Arrastra tu archivo Excel aquí</p>
+                                    <p class="text-muted small mb-3">o haz clic para seleccionarlo</p>
+
+                                    <input type="file" name="archivo_excel" id="input-excel" accept=".xlsx"
+                                        class="d-none">
+
+                                    <button type="button" class="btn btn-outline-secondary btn-sm"
+                                        onclick="document.getElementById('input-excel').click()">
+                                        Seleccionar archivo
+                                    </button>
+                                </div>
+
+                                <div class="d-grid mt-3">
+                                    <button type="submit" class="btn btn-success" id="btn-importar" disabled>
+                                        Importar Libros
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="{{ form.editorial.id_for_label }}" class="form-label">Editorial</label>
-                        {{ form.editorial }}
-                        <div class="text-danger small">{{ form.editorial.errors }}</div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="{{ form.anio.id_for_label }}" class="form-label">Año de publicación</label>
-                        {{ form.anio }}
-                        <div class="text-danger small">{{ form.anio.errors }}</div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="{{ form.stock.id_for_label }}" class="form-label">Stock</label>
-                        {{ form.stock }}
-                        <div class="text-danger small">{{ form.stock.errors }}</div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="{{ form.categoria.id_for_label }}" class="form-label">Categoría</label>
-                        {{ form.categoria }}
-                        <div class="text-danger small">{{ form.categoria.errors }}</div>
-                    </div>
-
-                    {% if form.errors %}
-                    <div class="alert alert-danger">
-                        Por favor corrige los errores abajo.
-                    </div>
-                    {% endif %}
-
-                    <div class="d-grid gap-2">
-                        <button class="btn btn-primary" type="submit">Ingresar Libro</button>
-                    </div>
-                </form>
+                </div>
             </div>
         </section>
+
+        <script>
+            const dropZone = document.getElementById('drop-zone');
+            const inputExcel = document.getElementById('input-excel');
+            const btnImportar = document.getElementById('btn-importar');
+            const dropText = document.getElementById('drop-text');
+
+            // Click en zona abre selector
+            dropZone.addEventListener('click', function (e) {
+                if (e.target !== document.querySelector('#drop-zone button')) {
+                    inputExcel.click();
+                }
+            });
+
+            // Drag over
+            dropZone.addEventListener('dragover', function (e) {
+                e.preventDefault();
+                dropZone.style.background = '#e8f4fd';
+                dropZone.style.borderColor = '#0d6efd';
+            });
+
+            dropZone.addEventListener('dragleave', function () {
+                dropZone.style.background = '';
+                dropZone.style.borderColor = '#adb5bd';
+            });
+
+            // Drop
+            dropZone.addEventListener('drop', function (e) {
+                e.preventDefault();
+                dropZone.style.background = '';
+                dropZone.style.borderColor = '#adb5bd';
+
+                const file = e.dataTransfer.files[0];
+                if (file && file.name.endsWith('.xlsx')) {
+                    asignarArchivo(file);
+                } else {
+                    alert('Solo se aceptan archivos .xlsx');
+                }
+            });
+
+            // Selección manual
+            inputExcel.addEventListener('change', function () {
+                if (this.files[0]) {
+                    asignarArchivo(this.files[0]);
+                }
+            });
+
+            function asignarArchivo(file) {
+                // Asignamos el archivo al input real mediante DataTransfer
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                inputExcel.files = dt.files;
+
+                dropText.textContent = file.name;
+                dropZone.style.background = '#d1e7dd';
+                dropZone.style.borderColor = '#198754';
+                btnImportar.disabled = false;
+                btnImportar.textContent = `Importar "${file.name}"`;
+            }
+        </script>
 
         <footer class="site-footer mt-auto">
             <div id="footer-container">

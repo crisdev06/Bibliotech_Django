@@ -15,7 +15,7 @@ class LibroForm(forms.ModelForm):
     class Meta:
         model = Libro
         # Listamos los campos que queremos que el usuario llene
-        fields = ['titulo', 'categoria', 'autor', 'editorial', 'anio', 'stock', 'activo']
+        fields = ['titulo', 'categoria', 'autor', 'editorial', 'anio', 'stock', 'activo', 'descripcion']
         
         # Etiquetas personalizadas para que se vea bonito en el HTML
         labels = {
@@ -26,6 +26,7 @@ class LibroForm(forms.ModelForm):
             'anio': 'Año de Publicación',
             'stock': 'Cantidad Disponible (Stock)',
             'activo': '¿Está Activo?',
+            'descripcion': 'Descripción'
         }
         
         # 'widgets' sirve para darle clases de CSS (Bootstrap) a los inputs
@@ -61,6 +62,11 @@ class LibroForm(forms.ModelForm):
             }),
             'activo': forms.CheckboxInput(attrs={
                 'class': 'form-check-input'
+            }),
+            'descripcion': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ingrese una descripción del libro',
+                'rows': 4
             }),
         }
 

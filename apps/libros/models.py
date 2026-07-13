@@ -31,6 +31,16 @@ class Libro(models.Model):
     blank=True,
     verbose_name="Categoría"
     )
+    descripcion = models.TextField(blank=True, null=True, verbose_name="Descripción")
+
+    def save(self, *args, **kwargs):
+            # Si el stock llega a 0, desactivamos automáticamente
+            if self.stock <= 0:
+                self.stock = 0  # evitar negativos
+                self.activo = False
+            else:
+                self.activo = True
+            super().save(*args, **kwargs)
 
 
   

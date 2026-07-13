@@ -49,7 +49,8 @@ def listar_prestamos(request):
 
 
 def registrar_prestamo(request):
-    libros_data = list(Libro.objects.filter(activo=True).values('id', 'titulo', 'autor'))
+
+    libros_data = list(Libro.objects.filter(activo=True, stock__gt=0).values('id', 'titulo', 'autor'))
 
     if request.user.is_superuser:
         FormularioClase = PrestamoForm

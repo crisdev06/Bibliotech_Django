@@ -37,6 +37,7 @@ urlpatterns = [
     path('eliminar-libro/<int:id>/', libroV.eliminar_libro, name='eliminar_libro'),
     path('tabla-libros/', libroV.listar_libros, name='tabla_libros'),
     path('catalogo/', libroV.catalogo, name='catalogo'),
+    path('libro/<int:id>/', libroV.detalle_libro, name='detalle_libro'),
 
 
     # Rutas para USUARIOS

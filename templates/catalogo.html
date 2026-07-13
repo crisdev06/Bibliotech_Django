@@ -86,7 +86,8 @@
                             <span class="navbar-text me-3 text-white" style="color: inherit;">
                                 Hola, {{ user.first_name|default:user.username|title }}
                             </span>
-                            <form action="{% url 'logout' %}" method="post" class="d-flex m-0 bg-transparent">
+                            <form action="{% url 'logout' %}" method="post"
+                                class="d-flex m-0 p-0 bg-transparent border-0">
                                 {% csrf_token %}
                                 <button class="btn btn-sm btn-danger border-0 fw-bold px-3" type="submit">Cerrar
                                     Sesión</button>
@@ -317,24 +318,29 @@
 
                         {% for libro in libros %}
                         <div class="col-md-6 col-lg-4">
-                            <div class="card h-100 shadow">
-                                <img src="{% static 'image/img_defecto.jpg' %}" class="card-img-top"
-                                    alt="{{ libro.titulo }}">
-                                <div class="card-body d-flex flex-column">
-                                    <h5 class="card-title">{{ libro.titulo }}</h5>
-                                    <h6 class="card-subtitle mb-2 text-muted">{{ libro.autor }}</h6>
-                                    {% if libro.categoria %}
-                                    <span class="badge bg-secondary mb-2" style="width: fit-content;">
-                                        {{ libro.categoria.nombre }}
-                                    </span>
-                                    {% endif %}
-                                    {% if user.is_authenticated %}
-                                    <a href="{% url 'renta' %}?libro={{ libro.id }}" class="btn btn-primary mt-auto">
-                                        Arrendar
-                                    </a>
-                                    {% endif %}
+                            <a href="{% url 'detalle_libro' libro.id %}" class="text-decoration-none text-dark">
+                                <div class="card h-100 shadow" style="cursor: pointer; transition: transform 0.2s;"
+                                    onmouseover="this.style.transform='scale(1.03)'"
+                                    onmouseout="this.style.transform='scale(1)'">
+                                    <img src="{% static 'image/img_defecto.jpg' %}" class="card-img-top"
+                                        alt="{{ libro.titulo }}">
+                                    <div class="card-body d-flex flex-column">
+                                        <h5 class="card-title">{{ libro.titulo }}</h5>
+                                        <h6 class="card-subtitle mb-2 text-muted">{{ libro.autor }}</h6>
+                                        {% if libro.categoria %}
+                                        <span class="badge bg-secondary mb-2" style="width: fit-content;">
+                                            {{ libro.categoria.nombre }}
+                                        </span>
+                                        {% endif %}
+                                        {% if user.is_authenticated %}
+                                        <a href="{% url 'renta' %}?libro={{ libro.id }}" class="btn btn-primary mt-auto"
+                                            onclick="event.stopPropagation()">
+                                            Arrendar
+                                        </a>
+                                        {% endif %}
+                                    </div>
                                 </div>
-                            </div>
+                            </a>
                         </div>
                         {% empty %}
                         <div class="col-12 text-center my-5">

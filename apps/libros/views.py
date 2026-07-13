@@ -1,8 +1,10 @@
+import openpyxl
 from django.shortcuts import render, redirect
 from django.shortcuts import get_object_or_404
 from .forms import LibroForm
 from .models import Libro, Categoria
 from django.contrib import messages
+
 
 
 
@@ -20,11 +22,17 @@ def listar_libros(request):
 
 def registrar_libro(request):
     if request.method == 'POST':
-        form = LibroForm(request.POST)
-        if form.is_valid():
-            libro_nuevo = form.save(commit=False)
 
-            # Obtenemos el número más alto existente y sumamos 1
+        # --- CARGA MASIVA POR EXCEL ---
+        if 'archivo_excel' in request.FILES:
+            archivo = request.FILES['archivo_excel']
+            try:
+                wb = openpyxl.load_workbook(archivo)
+                ws = wb.active
+            except Exception:
+                messages.error(request, "El archivo no es un Excel válido (.xlsx).")
+                return render(request, 'registrarLibro.html', {'form': LibroForm()})
+
             libros_ids = Libro.objects.values_list('id_libro', flat=True)
             numeros = []
             for id_libro in libros_ids:
@@ -32,61 +40,83 @@ def registrar_libro(request):
                     numeros.append(int(id_libro.replace("LBR", "")))
                 except:
                     pass
+            contador = max(numeros) + 1 if numeros else 1
 
-            nuevo_numero = max(numeros) + 1 if numeros else 1
-            libro_nuevo.id_libro = f"LBR{nuevo_numero}"
-            libro_nuevo.activo = True
-            libro_nuevo.save()
+            exitosos = 0
+            errores = []
 
-            messages.success(request, f"Libro registrado exitosamente con código LBR{nuevo_numero}.")
-            return redirect('tabla_libros')
-    else:
-        form = LibroForm()
-
-    return render(request, 'registrarLibro.html', {'form': form})
-
-"""
-def registrar_libro(request):
-    if request.method == 'POST':
-        form = LibroForm(request.POST)
-        if form.is_valid():
-            # 1. Detenemos el guardado automático para asignar el ID manualmente
-            libro_nuevo = form.save(commit=False)
-
-            # --- LÓGICA AUTO-INCREMENTAL "LBR" ---
-            # Buscamos el último libro registrado en la base de datos
-            ultimo_libro = Libro.objects.last() # Obtiene el último según su ID interno (PK)
-
-            if not ultimo_libro:
-                # Si no hay libros, este es el primero
-                nuevo_id = "LBR1"
-            else:
-                # Obtenemos el ID del último (Ej: "LBR15")
-                string_id = ultimo_libro.id_libro
-
+            for i, fila in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+                if not any(fila):
+                    continue
                 try:
-                    # Quitamos "LBR" y convertimos a número (Ej: 15)
-                    parte_numerica = int(string_id.replace("LBR", ""))
-                    # Sumamos 1 y volvemos a armar el string
-                    nuevo_id = f"LBR{parte_numerica + 1}"
-                except:
-                    # Si el último ID tenía un formato raro, reiniciamos o usamos fallback
-                    nuevo_id = "LBR1"
+                    titulo      = str(fila[0]).strip() if fila[0] else None
+                    autor       = str(fila[1]).strip() if fila[1] else None
+                    editorial   = str(fila[2]).strip() if fila[2] else None
+                    anio        = int(fila[3]) if fila[3] else None
+                    stock       = int(fila[4]) if fila[4] else 0
+                    cat_nombre  = str(fila[5]).strip() if fila[5] else None
+                    descripcion = str(fila[6]).strip() if fila[6] else ''
 
-            # Asignamos el ID generado al objeto
-            libro_nuevo.id_libro = nuevo_id
-            libro_nuevo.activo = True
+                    if not titulo or not autor or not editorial or not anio:
+                        errores.append(f"Fila {i}: faltan campos obligatorios.")
+                        continue
 
-            # Guardamos definitivamente
-            libro_nuevo.save()
+                    categoria = None
+                    if cat_nombre:
+                        try:
+                            categoria = Categoria.objects.get(nombre__iexact=cat_nombre)
+                        except Categoria.DoesNotExist:
+                            errores.append(f"Fila {i}: categoría '{cat_nombre}' no existe, libro guardado sin categoría.")
 
-            messages.success(request, f"Libro registrado exitosamente con código {nuevo_id}.")
-            return redirect('tabla_libros')
+                    Libro.objects.create(
+                        id_libro=f"LBR{contador}",
+                        titulo=titulo,
+                        autor=autor,
+                        editorial=editorial,
+                        anio=anio,
+                        stock=stock,
+                        categoria=categoria,
+                        descripcion=descripcion,
+                        activo=True,
+                    )
+                    contador += 1
+                    exitosos += 1
+
+                except Exception as e:
+                    errores.append(f"Fila {i}: error — {str(e)}")
+
+            return render(request, 'registrarLibro.html', {
+                'form': LibroForm(),
+                'exitosos': exitosos,
+                'errores': errores,
+            })
+
+        # --- REGISTRO INDIVIDUAL ---
+        else:
+            form = LibroForm(request.POST)
+            if form.is_valid():
+                libro_nuevo = form.save(commit=False)
+
+                libros_ids = Libro.objects.values_list('id_libro', flat=True)
+                numeros = []
+                for id_libro in libros_ids:
+                    try:
+                        numeros.append(int(id_libro.replace("LBR", "")))
+                    except:
+                        pass
+                nuevo_numero = max(numeros) + 1 if numeros else 1
+                libro_nuevo.id_libro = f"LBR{nuevo_numero}"
+                libro_nuevo.activo = True
+                libro_nuevo.save()
+
+                messages.success(request, f"Libro registrado exitosamente con código LBR{nuevo_numero}.")
+                return redirect('tabla_libros')
     else:
         form = LibroForm()
 
     return render(request, 'registrarLibro.html', {'form': form})
-"""
+
+
 
 
 def editar_libro(request, id):
@@ -144,21 +174,8 @@ def catalogo(request):
         'anios_sel': anios_sel,
     })
 
-"""
-def catalogo(request):
+def detalle_libro(request, id):
+    libro = get_object_or_404(Libro, id=id, activo=True)
+    return render(request, 'detalleLibro.html', {'libro': libro})
 
-    query = request.GET.get('search', '')
-    
-    if query:
-        # Filtra si hay texto en el buscador
-        libros = Libro.objects.filter(activo=True, titulo__icontains=query)
-    else:
-        # Trae todo si el buscador está vacío
-        libros = Libro.objects.filter(activo=True)
-        
-    context = {
-        'libros': libros
-    }
-    
-    return render(request, 'catalogo.html', context)
-"""
+
