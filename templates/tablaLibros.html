@@ -111,6 +111,7 @@
                                 <th class="titulo-tabla text-center">Editorial</th>
                                 <th class="titulo-tabla text-center">Año</th>
                                 <th class="titulo-tabla text-center">Stock</th>
+                                <th class="titulo-tabla text-center">Categoría</th>
                                 <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
@@ -123,6 +124,7 @@
                                 <td>{{ libro.editorial }}</td>
                                 <td>{{ libro.anio }}</td>
                                 <td>{{ libro.stock }}</td>
+                                <td>{{ libro.categoria }}</td>
                                 <td class="text-center">
                                     {% if user.is_superuser %}
                                     <a href="{% url 'editar_libro' libro.id %}" class="btn btn-sm btn-info">Editar</a>

@@ -15,6 +15,40 @@
     <title>Bibliotech - Renta de Libros</title>
 </head>
 
+{% if messages %}
+{% for message in messages %}
+{% if 'error' in message.tags %}
+
+<!-- Modal de error -->
+<div class="modal fade" id="modalError" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">⚠️ Límite alcanzado</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <p class="fs-6">{{ message }}</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <a href="{% url 'tabla_prestamos' %}" class="btn btn-primary">Ver mis préstamos</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var modal = new bootstrap.Modal(document.getElementById('modalError'));
+        modal.show();
+    });
+</script>
+
+{% endif %}
+{% endfor %}
+{% endif %}
+
 <body>
     <div id="main-container">
         <header>
@@ -100,7 +134,10 @@
 
         <section class="bg-light py-5">
             <div class="container">
-                <h2 class="mb-4 text-center">Formulario de Renta de Libros</h2>
+                <h2 class="mb-4 text-center">Formulario de Renta </h2>
+
+
+
                 <form method="POST" class="p-4 border rounded bg-white shadow-sm">
                     {% csrf_token %}
 

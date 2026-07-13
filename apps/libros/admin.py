@@ -1,13 +1,14 @@
 from django.contrib import admin
-from .models import Libro
+from .models import Libro, Categoria
 
 # Esta clase permite personalizar cómo se ve la tabla en el admin
 class LibroAdmin(admin.ModelAdmin):
     # Campos que se mostrarán en la lista (columnas de la tabla)
-    list_display = ('id','id_libro', 'titulo', 'autor', 'stock', 'anio', 'activo')
+    list_display = ('id','id_libro', 'titulo', 'autor', 'stock', 'anio', 'categoria', 'activo')
     # Campos por los que podrás buscar
     search_fields = ('titulo', 'autor', 'id_libro')
     list_filter = ('activo',)
 
 # Registramos el modelo con su configuración
 admin.site.register(Libro, LibroAdmin)
+admin.site.register(Categoria)

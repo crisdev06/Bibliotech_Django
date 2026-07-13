@@ -12,7 +12,9 @@ class Categoria(models.Model):
     class Meta:
         verbose_name = "Categoría"
         verbose_name_plural = "Categorías"
-        ordering = ['nombre']  # Las ordena alfabéticamente
+        ordering = ['nombre']  
+
+
 class Libro(models.Model):
     id = models.AutoField(primary_key=True)
     id_libro = models.CharField( verbose_name="ID Libro", max_length=13, unique=True,)

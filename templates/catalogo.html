@@ -103,25 +103,17 @@
         <div id="mensaje"></div>
         <div class="container my-5">
 
-            <!-- Título y buscador alineados a la derecha -->
+            <!-- Título y buscador -->
             <div class="d-flex justify-content-between align-items-center mb-4">
-
                 <div class="col-3 d-none d-md-block"></div>
-
-                <!-- Contenedor del Título Centralizado -->
                 <div class="col-12 col-md-6 text-center">
                     <h2 class="m-0">Catálogo de Libros</h2>
                 </div>
-
-                <!-- Contenedor del buscador -->
                 <div class="position-relative rounded-search" style="width: 250px;">
-                    <form method="GET" action="{% url 'catalogo' %}" class="d-flex">
-                        <!-- Campo de búsqueda -->
+                    <form method="GET" action="{% url 'catalogo' %}" class="d-flex" id="form-search">
                         <input type="text" name="search" class="form-control" placeholder="Buscar..."
                             value="{{ request.GET.search|default:'' }}" aria-label="Buscar libro">
-                        <!-- Botón con ícono de lupa -->
-                        <button class="btn-icon" type="submit">
-                            <!-- Ícono de lupa usando Bootstrap Icons (SVG) -->
+                        <button class="btn btn-dark" type="submit">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                                 class="bi bi-search" viewBox="0 0 16 16">
                                 <path
@@ -132,73 +124,247 @@
                 </div>
             </div>
 
+            <!-- Layout: sidebar izquierda + catálogo derecha -->
+            <div class="row">
 
-            <!-- Filtros de categoría -->
-            <div class="d-flex flex-wrap gap-2 mb-4">
-                <a href="{% url 'catalogo' %}{% if request.GET.search %}?search={{ request.GET.search }}{% endif %}"
-                    class="btn btn-sm {% if not categoria_seleccionada %}btn-primary{% else %}btn-outline-primary{% endif %}">
-                    Todos
-                </a>
-                {% for cat in categorias %}
-                <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}categoria={{ cat.id }}"
-                    class="btn btn-sm {% if categoria_seleccionada == cat.id|stringformat:'s' %}btn-primary{% else %}btn-outline-primary{% endif %}">
-                    {{ cat.nombre }}
-                </a>
-                {% endfor %}
-            </div>
+                <!-- SIDEBAR DE FILTROS -->
+                <div class="col-12 col-md-3 mb-4">
+                    <form method="GET" action="{% url 'catalogo' %}" id="form-filtros">
 
+                        <!-- Conservar el buscador al aplicar filtros -->
+                        {% if request.GET.search %}
+                        <input type="hidden" name="search" value="{{ request.GET.search }}">
+                        {% endif %}
 
+                        <div class="card shadow-sm">
+                            <div class="card-header fw-bold">Filtros</div>
+                            <div class="card-body p-3">
 
-            <!-- Contenedor del catálogo de libros -->
-            <div class="row g-4">
-                {% for libro in libros %}
-                <div class="col-md-4 col-lg-3">
-                    <div class="card h-100 shadow">
-                        <img src="{% static 'image/img_defecto.jpg' %}" class="card-img-top" alt="{{ libro.titulo }}">
+                                <div class="d-grid gap-2 mb-3">
+                                    <button type="submit" class="btn btn-primary btn-sm">Aplicar filtros</button>
+                                    <a href="{% url 'catalogo' %}{% if request.GET.search %}?search={{ request.GET.search }}{% endif %}"
+                                        class="btn btn-outline-secondary btn-sm">Limpiar filtros</a>
+                                </div>
 
-                        <div class="card-body">
-                            <h5 class="card-title">{{ libro.titulo }}</h5>
-                            <h6 class="card-subtitle mb-2 text-muted">{{ libro.autor }}</h6>
-                            {% if libro.categoria %}
-                            <span class="badge bg-secondary mb-2" style="width: fit-content;">{{ libro.categoria.nombre
-                                }}</span>
-                            {% endif %}
-                            {% if user.is_authenticated %}
-                            <a href="{% url 'renta' %}?libro={{ libro.id }}" class="btn btn-primary mt-auto">
-                                Arrendar
-                            </a>
-                            {% endif %}
+                                <div class="accordion accordion-flush" id="accordionFiltros">
+
+                                    <!-- CATEGORÍAS -->
+                                    {% if categorias %}
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button
+                                                class="accordion-button {% if not categorias_sel %}collapsed{% endif %} py-2 px-0 bg-transparent shadow-none fw-semibold"
+                                                type="button" data-bs-toggle="collapse"
+                                                data-bs-target="#collapseCategoria">
+                                                Categoría
+                                            </button>
+                                        </h2>
+                                        <div id="collapseCategoria"
+                                            class="accordion-collapse collapse {% if categorias_sel %}show{% endif %}">
+                                            <div class="accordion-body px-0 pt-1 pb-2">
+                                                {% for cat in categorias %}
+                                                <div class="form-check">
+                                                    {% if cat.id|stringformat:'s' in categorias_sel %}
+                                                    <input class="form-check-input" type="checkbox" name="categoria"
+                                                        value="{{ cat.id }}" id="cat-{{ cat.id }}" checked>
+                                                    {% else %}
+                                                    <input class="form-check-input" type="checkbox" name="categoria"
+                                                        value="{{ cat.id }}" id="cat-{{ cat.id }}">
+                                                    {% endif %}
+                                                    <label class="form-check-label" for="cat-{{ cat.id }}">
+                                                        {{ cat.nombre }}
+                                                    </label>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+
+                                    <!-- AUTORES -->
+                                    {% if autores %}
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button
+                                                class="accordion-button {% if not autores_sel %}collapsed{% endif %} py-2 px-0 bg-transparent shadow-none fw-semibold"
+                                                type="button" data-bs-toggle="collapse" data-bs-target="#collapseAutor">
+                                                Autor
+                                            </button>
+                                        </h2>
+                                        <div id="collapseAutor"
+                                            class="accordion-collapse collapse {% if autores_sel %}show{% endif %}">
+                                            <div class="accordion-body px-0 pt-1 pb-2">
+                                                {% for autor in autores %}
+                                                <div class="form-check">
+                                                    {% if autor in autores_sel %}
+                                                    <input class="form-check-input" type="checkbox" name="autor"
+                                                        value="{{ autor }}" id="autor-{{ forloop.counter }}" checked>
+                                                    {% else %}
+                                                    <input class="form-check-input" type="checkbox" name="autor"
+                                                        value="{{ autor }}" id="autor-{{ forloop.counter }}">
+                                                    {% endif %}
+                                                    <label class="form-check-label" for="autor-{{ forloop.counter }}">
+                                                        {{ autor }}
+                                                    </label>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+
+                                    <!-- EDITORIALES -->
+                                    {% if editoriales %}
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button
+                                                class="accordion-button {% if not editoriales_sel %}collapsed{% endif %} py-2 px-0 bg-transparent shadow-none fw-semibold"
+                                                type="button" data-bs-toggle="collapse"
+                                                data-bs-target="#collapseEditorial">
+                                                Editorial
+                                            </button>
+                                        </h2>
+                                        <div id="collapseEditorial"
+                                            class="accordion-collapse collapse {% if editoriales_sel %}show{% endif %}">
+                                            <div class="accordion-body px-0 pt-1 pb-2">
+                                                {% for editorial in editoriales %}
+                                                <div class="form-check">
+                                                    {% if editorial in editoriales_sel %}
+                                                    <input class="form-check-input" type="checkbox" name="editorial"
+                                                        value="{{ editorial }}" id="editorial-{{ forloop.counter }}"
+                                                        checked>
+                                                    {% else %}
+                                                    <input class="form-check-input" type="checkbox" name="editorial"
+                                                        value="{{ editorial }}" id="editorial-{{ forloop.counter }}">
+                                                    {% endif %}
+                                                    <label class="form-check-label"
+                                                        for="editorial-{{ forloop.counter }}">
+                                                        {{ editorial }}
+                                                    </label>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+
+                                    <!-- AÑOS -->
+                                    {% if anios %}
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button
+                                                class="accordion-button {% if not anios_sel %}collapsed{% endif %} py-2 px-0 bg-transparent shadow-none fw-semibold"
+                                                type="button" data-bs-toggle="collapse" data-bs-target="#collapseAnio">
+                                                Año
+                                            </button>
+                                        </h2>
+                                        <div id="collapseAnio"
+                                            class="accordion-collapse collapse {% if anios_sel %}show{% endif %}">
+                                            <div class="accordion-body px-0 pt-1 pb-2">
+                                                {% for anio in anios %}
+                                                <div class="form-check">
+                                                    {% if anio|stringformat:'s' in anios_sel %}
+                                                    <input class="form-check-input" type="checkbox" name="anio"
+                                                        value="{{ anio }}" id="anio-{{ forloop.counter }}" checked>
+                                                    {% else %}
+                                                    <input class="form-check-input" type="checkbox" name="anio"
+                                                        value="{{ anio }}" id="anio-{{ forloop.counter }}">
+                                                    {% endif %}
+                                                    <label class="form-check-label" for="anio-{{ forloop.counter }}">
+                                                        {{ anio }}
+                                                    </label>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+
+                                </div>
+                            </div>
                         </div>
+                    </form>
+                </div>
 
+                <!-- CATÁLOGO DE LIBROS -->
+                <div class="col-12 col-md-9">
+                    <div class="row g-4">
+
+                        {% if categorias_sel or autores_sel or editoriales_sel or anios_sel %}
+                        <div class="mb-3 d-flex flex-wrap gap-2 align-items-center">
+                            <span class="fw-semibold text-muted">Filtrando por:</span>
+
+                            {% for cat in categorias %}
+                            {% if cat.id|stringformat:'s' in categorias_sel %}
+                            <span class="badge bg-primary">Categoría: {{ cat.nombre }}</span>
+                            {% endif %}
+                            {% endfor %}
+
+                            {% for autor in autores_sel %}
+                            <span class="badge bg-success">Autor: {{ autor }}</span>
+                            {% endfor %}
+
+                            {% for editorial in editoriales_sel %}
+                            <span class="badge bg-warning text-dark">Editorial: {{ editorial }}</span>
+                            {% endfor %}
+
+                            {% for anio in anios_sel %}
+                            <span class="badge bg-info text-dark">Año: {{ anio }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+
+                        {% for libro in libros %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 shadow">
+                                <img src="{% static 'image/img_defecto.jpg' %}" class="card-img-top"
+                                    alt="{{ libro.titulo }}">
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title">{{ libro.titulo }}</h5>
+                                    <h6 class="card-subtitle mb-2 text-muted">{{ libro.autor }}</h6>
+                                    {% if libro.categoria %}
+                                    <span class="badge bg-secondary mb-2" style="width: fit-content;">
+                                        {{ libro.categoria.nombre }}
+                                    </span>
+                                    {% endif %}
+                                    {% if user.is_authenticated %}
+                                    <a href="{% url 'renta' %}?libro={{ libro.id }}" class="btn btn-primary mt-auto">
+                                        Arrendar
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12 text-center my-5">
+                            <p class="text-muted fs-5">No se encontraron libros que coincidan con tu búsqueda.</p>
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
-                {% empty %}
-                <div class="col-12 text-center my-5">
-                    <p class="text-muted fs-5">No se encontraron libros que coincidan con tu búsqueda.</p>
-                </div>
-                {% endfor %}
+
             </div>
-
         </div>
-    </div>
 
-    <footer class="site-footer">
-        <div id="footer-container">
-            <div class="footer-top">©️ 2025 Todos los Derechos Reservados. <br> Descubre la experiencia de la lectura
-                Física/digital - Bibliotech</div>
-            <ul class="footer-links">
-                <li><a class="link" href="https://github.com/crisdev06/BiblioTech" target="_blank" rel="noreferrer">
-                        <img class="logo" src="{% static 'icons/github.png' %}" alt="Logo github">
-                    </a>
-                </li>
-                <li><a class="link" href="https://portal.inacap.cl" target="_blank">
-                        <img class="logo" src="{% static 'icons/inacap.png' %}" alt="Logo inacap">
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </footer>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <footer class="site-footer">
+            <div id="footer-container">
+                <div class="footer-top">©️ 2025 Todos los Derechos Reservados. <br> Descubre la experiencia de la
+                    lectura
+                    Física/digital - Bibliotech</div>
+                <ul class="footer-links">
+                    <li><a class="link" href="https://github.com/crisdev06/BiblioTech" target="_blank" rel="noreferrer">
+                            <img class="logo" src="{% static 'icons/github.png' %}" alt="Logo github">
+                        </a>
+                    </li>
+                    <li><a class="link" href="https://portal.inacap.cl" target="_blank">
+                            <img class="logo" src="{% static 'icons/inacap.png' %}" alt="Logo inacap">
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </footer>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

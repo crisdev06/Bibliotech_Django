@@ -4,6 +4,12 @@ from datetime import date
 from apps.usuarios.models import Usuario
 from apps.libros.models import Libro
 
+LIMITE_PRESTAMOS = {
+    'ESTUDIANTE': 3,
+    'DOCENTE': 5,
+    'ADMINISTRATIVO': 4,
+}
+
 
 class Prestamo(models.Model):
     ESTADOS_PRESTAMO = [
@@ -49,15 +55,29 @@ class Prestamo(models.Model):
         MULTA_POR_DIA = 500  #por definir una multa(precio o sancion)
         return self.dias_atraso * MULTA_POR_DIA
 
-
-
+    
     def save(self, *args, **kwargs):
         es_nuevo = self.pk is None
-        
+
         if es_nuevo:
-            # Validación de stock (aquí sí se ejecuta siempre)
+            # Validación de stock
             if self.libro.stock <= 0:
                 raise ValidationError(f"Lo sentimos, no queda stock del libro '{self.libro.titulo}'.")
+
+            # Validación de límite de préstamos
+            prestamos_activos = Prestamo.objects.filter(
+                usuario=self.usuario,
+                activo=True,
+                fecha_devolucion_real__isnull=True  # solo los no devueltos
+            ).count()
+
+            limite = LIMITE_PRESTAMOS.get(self.usuario.tipo, 3)  # 3 por defecto si el tipo no está en el dict
+
+            if prestamos_activos >= limite:
+                raise ValidationError(
+                    f"Has alcanzado el límite de {limite} préstamos activos permitidos para tu tipo de usuario ({self.usuario.tipo})."
+                )
+
             self.libro.stock -= 1
             self.libro.save()
 
@@ -73,3 +93,4 @@ class Prestamo(models.Model):
     class Meta:
         verbose_name = "Préstamo"
         verbose_name_plural = "Préstamos"
+

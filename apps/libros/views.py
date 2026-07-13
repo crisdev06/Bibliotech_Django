@@ -22,6 +22,34 @@ def registrar_libro(request):
     if request.method == 'POST':
         form = LibroForm(request.POST)
         if form.is_valid():
+            libro_nuevo = form.save(commit=False)
+
+            # Obtenemos el número más alto existente y sumamos 1
+            libros_ids = Libro.objects.values_list('id_libro', flat=True)
+            numeros = []
+            for id_libro in libros_ids:
+                try:
+                    numeros.append(int(id_libro.replace("LBR", "")))
+                except:
+                    pass
+
+            nuevo_numero = max(numeros) + 1 if numeros else 1
+            libro_nuevo.id_libro = f"LBR{nuevo_numero}"
+            libro_nuevo.activo = True
+            libro_nuevo.save()
+
+            messages.success(request, f"Libro registrado exitosamente con código LBR{nuevo_numero}.")
+            return redirect('tabla_libros')
+    else:
+        form = LibroForm()
+
+    return render(request, 'registrarLibro.html', {'form': form})
+
+"""
+def registrar_libro(request):
+    if request.method == 'POST':
+        form = LibroForm(request.POST)
+        if form.is_valid():
             # 1. Detenemos el guardado automático para asignar el ID manualmente
             libro_nuevo = form.save(commit=False)
 
@@ -58,6 +86,8 @@ def registrar_libro(request):
         form = LibroForm()
 
     return render(request, 'registrarLibro.html', {'form': form})
+"""
+
 
 def editar_libro(request, id):
     libro = get_object_or_404(Libro, id=id)
@@ -80,22 +110,38 @@ def eliminar_libro(request, id):
 
 def catalogo(request):
     query = request.GET.get('search', '')
-    categoria_id = request.GET.get('categoria', '')
+    categorias_sel = request.GET.getlist('categoria') 
+    autores_sel = request.GET.getlist('autor')
+    editoriales_sel = request.GET.getlist('editorial')
+    anios_sel = request.GET.getlist('anio')
 
     libros = Libro.objects.filter(activo=True)
 
     if query:
         libros = libros.filter(titulo__icontains=query) | libros.filter(autor__icontains=query)
+    if categorias_sel:
+        libros = libros.filter(categoria__id__in=categorias_sel)
+    if autores_sel:
+        libros = libros.filter(autor__in=autores_sel)
+    if editoriales_sel:
+        libros = libros.filter(editorial__in=editoriales_sel)
+    if anios_sel:
+        libros = libros.filter(anio__in=anios_sel)
 
-    if categoria_id:
-        libros = libros.filter(categoria__id=categoria_id)
-
-    categorias = Categoria.objects.all()
+    # Datos para los filtros del sidebar (solo de libros activos)
+    todos_libros = Libro.objects.filter(activo=True)
 
     return render(request, 'catalogo.html', {
         'libros': libros,
-        'categorias': categorias,
-        'categoria_seleccionada': categoria_id,
+        'categorias': Categoria.objects.all(),
+        'autores': todos_libros.values_list('autor', flat=True).distinct().order_by('autor'),
+        'editoriales': todos_libros.values_list('editorial', flat=True).distinct().order_by('editorial'),
+        'anios': todos_libros.values_list('anio', flat=True).distinct().order_by('-anio'),
+        # Selecciones actuales para mantener los checks al recargar
+        'categorias_sel': categorias_sel,
+        'autores_sel': autores_sel,
+        'editoriales_sel': editoriales_sel,
+        'anios_sel': anios_sel,
     })
 
 """
