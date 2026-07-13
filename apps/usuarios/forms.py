@@ -8,6 +8,20 @@ import re
 
 class UsuarioForm(forms.ModelForm):
 
+    terminos_condiciones = forms.BooleanField(
+        required=True,
+        label='Acepto los Términos y Condiciones de uso de la plataforma.',
+        error_messages={'required': 'Debes aceptar los Términos y Condiciones para registrarte.'},
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
+
+    uso_datos = forms.BooleanField(
+        required=True,
+        label='Autorizo el tratamiento de mis datos personales conforme a la Ley 21.719 de Protección de Datos Personales.',
+        error_messages={'required': 'Debes autorizar el uso de tus datos personales para registrarte.'},
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
+
     def __init__(self, *args, **kwargs):
         # 1. Extraemos el usuario que pasamos desde la vista
         self.user = kwargs.pop('user', None)
@@ -22,7 +36,7 @@ class UsuarioForm(forms.ModelForm):
 
     class Meta:
         model = Usuario
-        fields = ['nombre', 'apellido', 'rut', 'telefono', 'correo','password', 'tipo']
+        fields = ['nombre', 'apellido', 'rut', 'telefono', 'correo','password', 'tipo', 'terminos_condiciones', 'uso_datos']
         labels = {
             'nombre': 'Nombres',
             'apellido': 'Apellido',
@@ -31,6 +45,8 @@ class UsuarioForm(forms.ModelForm):
             'correo': 'Correo Electrónico',
             'password': 'Contraseña',
             'tipo': 'Tipo de Usuario',
+            'terminos_condiciones': 'Acepto los Términos y Condiciones de uso de la plataforma.',
+            'uso_datos': 'Autorizo el tratamiento de mis datos personales conforme a la Ley 19.628 y sus modificaciones vigentes sobre protección de la vida privada.',
         }
 
         widgets = {

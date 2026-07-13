@@ -122,40 +122,134 @@
 
                     {% for field in form %}
                     <div class="mb-3">
-                        <label class="form-label fw-bold">{{ field.label }}</label>
-                        {{ field }} {% if field.errors %}
-                        <div class="text-danger small mt-1">
-                            {{ field.errors.0 }}
+                        {% if field.field.widget.input_type == 'checkbox' %}
+                        <div class="form-check">
+                            {{ field }}
+                            <label class="form-check-label" for="{{ field.id_for_label }}">
+                                {{ field.label }}
+                            </label>
+                            {% if field.errors %}
+                            <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                            {% endif %}
                         </div>
+                        {% else %}
+                        <label class="form-label fw-bold">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                        <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                        {% endif %}
                         {% endif %}
                     </div>
                     {% endfor %}
+
+                    <div class="mb-2">
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#modalTerminos" class="small text-primary">
+                            Ver Términos y Condiciones completos
+                        </a>
+                    </div>
 
                     <div class="d-grid gap-2 mt-4">
                         <button type="submit" class="btn btn-primary">Registrar Usuario</button>
                         <a href="{% url 'index' %}" class="btn btn-secondary">Cancelar</a>
                     </div>
 
+                    <!-- Modal Términos y Condiciones -->
+                    <div class="modal fade" id="modalTerminos" tabindex="-1">
+                        <div class="modal-dialog modal-dialog-scrollable modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title fw-bold">Términos y Condiciones — BiblioTech</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <h6 class="fw-bold">1. Aceptación</h6>
+                                    <p>Al registrarte en BiblioTech aceptas cumplir con estos términos. Si no estás de
+                                        acuerdo, no podrás usar la plataforma.</p>
+
+                                    <h6 class="fw-bold">2. Uso de la plataforma</h6>
+                                    <p>BiblioTech es una plataforma de préstamo de libros digitales y físicos. El acceso
+                                        es personal e intransferible.</p>
+
+                                    <h6 class="fw-bold">3. Préstamos</h6>
+                                    <p>Los préstamos tienen fecha de devolución obligatoria. Los atrasos generan multas
+                                        según las tarifas vigentes. El incumplimiento reiterado puede resultar en la
+                                        suspensión de la cuenta.</p>
+
+                                    <h6 class="fw-bold">4. Responsabilidad</h6>
+                                    <p>El usuario es responsable del cuidado de los materiales prestados. Daños o
+                                        pérdidas serán cobrados al usuario responsable.</p>
+
+                                    <h6 class="fw-bold">5. Datos Personales</h6>
+                                    <p>Los datos recopilados se usan exclusivamente para la gestión de préstamos y
+                                        comunicaciones relacionadas con el servicio, en conformidad con la Ley 19.628
+                                        sobre Protección de la Vida Privada y sus modificaciones vigentes.</p>
+
+                                    <h6 class="fw-bold">6. Modificaciones</h6>
+                                    <p>BiblioTech se reserva el derecho de modificar estos términos con previo aviso a
+                                        los usuarios registrados.</p>
+
+                                    <hr>
+                                    <h6 class="fw-bold">Autorización de Uso de Datos — Ley 21.719</h6>
+                                    <p>De conformidad con la Ley N° 21.719 de Protección de Datos Personales de Chile,
+                                        BiblioTech recopila y trata los siguientes datos personales:</p>
+                                    <ul>
+                                        <li>Nombre completo y RUT — para identificación del usuario.</li>
+                                        <li>Correo electrónico y teléfono — para comunicaciones relacionadas con
+                                            préstamos.</li>
+                                        <li>Historial de préstamos — para gestión interna del servicio.</li>
+                                    </ul>
+                                    <p>Tus datos no serán cedidos a terceros sin tu consentimiento expreso, salvo
+                                        obligación legal. Conforme a la Ley 21.719, tienes derecho a:</p>
+                                    <ul>
+                                        <li><strong>Acceso:</strong> conocer qué datos tenemos sobre ti.</li>
+                                        <li><strong>Rectificación:</strong> corregir datos incorrectos.</li>
+                                        <li><strong>Supresión:</strong> solicitar la eliminación de tus datos.</li>
+                                        <li><strong>Oposición:</strong> oponerte al tratamiento de tus datos.</li>
+                                        <li><strong>Portabilidad:</strong> recibir tus datos en formato electrónico.
+                                        </li>
+                                    </ul>
+                                    <p>Para ejercer estos derechos, contacta al administrador de la plataforma.
+                                        BiblioTech se compromete a tratar tus datos con confidencialidad y seguridad
+                                        conforme a la normativa vigente.</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-primary"
+                                        data-bs-dismiss="modal">Entendido</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+
                 </form>
 
             </div>
         </section>
 
-        <footer class="site-footer mt-auto">
+        <footer class="site-footer">
             <div id="footer-container">
-                <div class="footer-top">©️ 2025 Todos los Derechos Reservados. <br> Descubre la experiencia de la
-                    lectura
-                    Física/digital - Bibliotech</div>
+                <div class="footer-top">
+                    <strong>BiblioTech</strong>
+                    Descubre la experiencia de la lectura física y digital.<br>
+                    Tu biblioteca digital de confianza.
+                </div>
                 <ul class="footer-links">
-                    <li><a class="link" href="https://github.com/crisdev06/BiblioTech" target="_blank" rel="noreferrer">
-                            <img class="logo" src="{% static 'icons/github.png' %}" alt="Logo github">
+                    <li>
+                        <a class="link" href="https://github.com/crisdev06/BiblioTech" target="_blank" rel="noreferrer"
+                            title="GitHub">
+                            <img class="logo" src="{% static 'icons/github.png' %}" alt="GitHub">
                         </a>
                     </li>
-                    <li><a class="link" href="https://portal.inacap.cl" target="_blank">
-                            <img class="logo" src="{% static 'icons/inacap.png' %}" alt="Logo inacap">
+                    <li>
+                        <a class="link" href="https://portal.inacap.cl" target="_blank" title="INACAP">
+                            <img class="logo" src="{% static 'icons/inacap.png' %}" alt="INACAP">
                         </a>
                     </li>
                 </ul>
+            </div>
+            <div class="footer-bottom">
+                © 2025 BiblioTech — Todos los derechos reservados.
             </div>
         </footer>
     </div>
